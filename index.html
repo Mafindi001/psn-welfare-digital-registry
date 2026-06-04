@@ -418,6 +418,174 @@
             line-height: 1.6;
         }
 
+        /* ====== ADMIN ACCESS SECTION ====== */
+        .admin-access-section {
+            background: linear-gradient(135deg, #1a3a6e 0%, #2c5aa0 100%);
+            padding: 4rem 1rem;
+        }
+
+        .admin-roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .admin-role-card {
+            background: rgba(255,255,255,.97);
+            border-radius: 14px;
+            padding: 1.75rem 1.5rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,.2);
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+            transition: transform .2s;
+        }
+
+        .admin-role-card:hover { transform: translateY(-4px); }
+
+        .admin-role-card.super-admin { border-top: 4px solid #2c5aa0; }
+        .admin-role-card.publicity   { border-top: 4px solid #28a745; }
+        .admin-role-card.system-admin{ border-top: 4px solid #6c757d; }
+
+        .role-icon {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: .25rem;
+        }
+
+        .super-admin .role-icon { background: #eef2fb; color: #2c5aa0; }
+        .publicity   .role-icon { background: #eaf7ed; color: #28a745; }
+        .system-admin .role-icon{ background: #f1f3f5; color: #6c757d; }
+
+        .admin-role-card h3 {
+            font-size: 1.1rem;
+            color: #1a3a6e;
+            font-weight: 700;
+        }
+
+        .role-desc {
+            font-size: .9rem;
+            color: #555;
+            line-height: 1.5;
+            flex: 1;
+        }
+
+        .cred-block {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: .75rem;
+            border: 1px solid #e9ecef;
+        }
+
+        .cred-row {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .35rem 0;
+            border-bottom: 1px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+
+        .cred-row:last-child { border-bottom: none; }
+
+        .cred-lbl {
+            font-size: .8rem;
+            color: #666;
+            min-width: 80px;
+            font-weight: 600;
+        }
+
+        .cred-val {
+            font-family: 'Courier New', monospace;
+            font-size: .82rem;
+            color: #2c5aa0;
+            font-weight: 700;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: .85rem;
+            padding: 2px 4px;
+            transition: color .2s;
+            flex-shrink: 0;
+        }
+
+        .copy-btn:hover { color: #2c5aa0; }
+
+        .copied-tip {
+            font-size: .75rem;
+            color: #28a745;
+            font-weight: 600;
+            display: none;
+        }
+
+        .copied-tip.show { display: inline; }
+
+        .role-login-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            background: #2c5aa0;
+            color: #fff;
+            text-decoration: none;
+            padding: .65rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: .9rem;
+            margin-top: .25rem;
+            transition: opacity .2s, transform .2s;
+        }
+
+        .role-login-btn:hover { opacity: .88; transform: translateY(-2px); }
+
+        .admin-security-note {
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.25);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            color: rgba(255,255,255,.9);
+            font-size: .9rem;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .admin-security-note i { font-size: 1.1rem; flex-shrink: 0; }
+
+        .admin-portal-cta {
+            margin-left: auto;
+            background: #ff6b35;
+            color: #fff;
+            text-decoration: none;
+            padding: .5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: .85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            white-space: nowrap;
+            transition: background .2s;
+        }
+
+        .admin-portal-cta:hover { background: #e55a2b; }
+
+        @media (max-width: 640px) {
+            .admin-roles-grid { grid-template-columns: 1fr; }
+            .admin-security-note { flex-direction: column; align-items: flex-start; }
+            .admin-portal-cta { margin-left: 0; }
+        }
+
         /* ====== FOOTER STYLES ====== */
         .footer {
             background: #1a3a6e;
@@ -718,6 +886,7 @@
             <div class="nav-links" id="navLinks">
                 <a href="#about" class="nav-link">About</a>
                 <a href="#features" class="nav-link">Features</a>
+                <a href="#admin-access" class="nav-link">Admin Access</a>
                 <a href="#contact" class="nav-link">Contact</a>
 
                 <!-- Dynamic Login/Logout Links -->
@@ -862,6 +1031,113 @@
         </div>
     </section>
 
+    <!-- Admin Access Section -->
+    <section class="admin-access-section" id="admin-access">
+        <div class="container">
+            <h2 class="section-title" style="color:#fff;">Admin Portal Access</h2>
+            <p class="section-subtitle" style="color:rgba(255,255,255,.85);">
+                Authorized PSN Taraba officials can log in using the credentials below.
+                All access is logged and audited.
+            </p>
+
+            <div class="admin-roles-grid">
+
+                <!-- Super Admin Card -->
+                <div class="admin-role-card super-admin">
+                    <div class="role-icon"><i class="fas fa-crown"></i></div>
+                    <h3>Super Administrator</h3>
+                    <p class="role-desc">Full system access — members, settings, backups, audit logs, news, and user management.</p>
+                    <div class="cred-block">
+                        <div class="cred-row">
+                            <span class="cred-lbl"><i class="fas fa-envelope"></i> Email</span>
+                            <span class="cred-val" id="sa-email">superadmin@psntaraba.org.ng</span>
+                            <button class="copy-btn" onclick="homeCopy('sa-email','sa-copy')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copied-tip" id="sa-copy">Copied!</span>
+                        </div>
+                        <div class="cred-row">
+                            <span class="cred-lbl"><i class="fas fa-lock"></i> Password</span>
+                            <span class="cred-val" id="sa-pass">PSN@SuperAdmin2025!</span>
+                            <button class="copy-btn" onclick="homeCopy('sa-pass','sa-pcopy')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copied-tip" id="sa-pcopy">Copied!</span>
+                        </div>
+                    </div>
+                    <a href="/pages/admin-login.html?role=superadmin" class="role-login-btn">
+                        <i class="fas fa-sign-in-alt"></i> Login as Super Admin
+                    </a>
+                </div>
+
+                <!-- Publicity Secretary Card -->
+                <div class="admin-role-card publicity">
+                    <div class="role-icon"><i class="fas fa-bullhorn"></i></div>
+                    <h3>Publicity Secretary</h3>
+                    <p class="role-desc">Manage news, announcements, and public communications for PSN Taraba.</p>
+                    <div class="cred-block">
+                        <div class="cred-row">
+                            <span class="cred-lbl"><i class="fas fa-envelope"></i> Email</span>
+                            <span class="cred-val" id="pub-email">publicity@psntaraba.org.ng</span>
+                            <button class="copy-btn" onclick="homeCopy('pub-email','pub-ecopy')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copied-tip" id="pub-ecopy">Copied!</span>
+                        </div>
+                        <div class="cred-row">
+                            <span class="cred-lbl"><i class="fas fa-lock"></i> Password</span>
+                            <span class="cred-val" id="pub-pass">PSN@Publicity2025!</span>
+                            <button class="copy-btn" onclick="homeCopy('pub-pass','pub-pcopy')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copied-tip" id="pub-pcopy">Copied!</span>
+                        </div>
+                    </div>
+                    <a href="/pages/admin-login.html?role=publicity" class="role-login-btn" style="background:#28a745;">
+                        <i class="fas fa-sign-in-alt"></i> Login as Publicity Sec.
+                    </a>
+                </div>
+
+                <!-- System Admin Card -->
+                <div class="admin-role-card system-admin">
+                    <div class="role-icon"><i class="fas fa-user-shield"></i></div>
+                    <h3>System Administrator</h3>
+                    <p class="role-desc">Standard admin access — members, reports, reminders, and data export.</p>
+                    <div class="cred-block">
+                        <div class="cred-row">
+                            <span class="cred-lbl"><i class="fas fa-envelope"></i> Email</span>
+                            <span class="cred-val" id="sys-email">admin@psntaraba.org.ng</span>
+                            <button class="copy-btn" onclick="homeCopy('sys-email','sys-ecopy')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copied-tip" id="sys-ecopy">Copied!</span>
+                        </div>
+                        <div class="cred-row">
+                            <span class="cred-lbl"><i class="fas fa-lock"></i> Password</span>
+                            <span class="cred-val" id="sys-pass">PSNTaraba2025!</span>
+                            <button class="copy-btn" onclick="homeCopy('sys-pass','sys-pcopy')" title="Copy">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copied-tip" id="sys-pcopy">Copied!</span>
+                        </div>
+                    </div>
+                    <a href="/pages/admin-login.html" class="role-login-btn" style="background:#6c757d;">
+                        <i class="fas fa-sign-in-alt"></i> Login as System Admin
+                    </a>
+                </div>
+            </div>
+
+            <div class="admin-security-note">
+                <i class="fas fa-shield-alt"></i>
+                <strong>Security Notice:</strong> Change default passwords immediately after first login.
+                All admin sessions are audited and IP-logged.
+                <a href="/pages/admin-login.html" class="admin-portal-cta">
+                    <i class="fas fa-external-link-alt"></i> Open Admin Login Page
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="footer" id="contact">
         <div class="container">
@@ -917,6 +1193,26 @@
     <script>
         // Set current year in footer
         document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Copy credential text to clipboard
+        function homeCopy(valueElId, tipElId) {
+            const text = document.getElementById(valueElId)?.textContent || '';
+            navigator.clipboard.writeText(text).then(() => {
+                const tip = document.getElementById(tipElId);
+                if (tip) {
+                    tip.classList.add('show');
+                    setTimeout(() => tip.classList.remove('show'), 2000);
+                }
+            }).catch(() => {
+                // Fallback for browsers without clipboard API
+                const range = document.createRange();
+                range.selectNode(document.getElementById(valueElId));
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+            });
+        }
 
         // Mobile menu toggle
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');
