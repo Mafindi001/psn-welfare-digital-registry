@@ -936,6 +936,11 @@
                     <i class="fas fa-chart-bar"></i>
                     <span>Reports</span>
                 </a>
+                <a href="#news" class="nav-item" data-section="news">
+                    <i class="fas fa-newspaper"></i>
+                    <span>News</span>
+                    <span class="badge" id="newsBadge">0</span>
+                </a>
                 <a href="#settings" class="nav-item" data-section="settings">
                     <i class="fas fa-cog"></i>
                     <span>Settings</span>
@@ -1340,6 +1345,152 @@
                 </div>
             </section>
 
+            <!-- News Section -->
+            <section id="newsSection" class="section-content">
+                <div class="data-section">
+                    <div class="section-header">
+                        <h3>News &amp; Announcements</h3>
+                        <button class="btn btn-primary" onclick="openNewsModal()">
+                            <i class="fas fa-plus"></i> New Post
+                        </button>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="filters-bar" style="display:flex;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
+                        <input type="text" id="newsSearch" class="form-control" placeholder="Search posts..."
+                            style="max-width:240px;" oninput="debounce(filterNews, 300)()" />
+                        <select id="newsStatusFilter" class="form-control" style="max-width:160px;" onchange="filterNews()">
+                            <option value="">All Status</option>
+                            <option value="draft">Draft</option>
+                            <option value="published">Published</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                        <select id="newsCategoryFilter" class="form-control" style="max-width:160px;" onchange="filterNews()">
+                            <option value="">All Categories</option>
+                            <option value="general">General</option>
+                            <option value="announcement">Announcement</option>
+                            <option value="event">Event</option>
+                            <option value="welfare">Welfare</option>
+                        </select>
+                    </div>
+
+                    <!-- Posts table -->
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Cover</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Status</th>
+                                    <th>Author</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="newsTableBody">
+                                <tr><td colspan="7" class="text-center">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination-controls" id="newsPagination" style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem;">
+                        <span id="newsPageInfo" class="text-muted"></span>
+                        <div style="display:flex;gap:.5rem;">
+                            <button class="btn btn-outline btn-sm" id="newsPrevBtn" onclick="newsChangePage(-1)">
+                                <i class="fas fa-chevron-left"></i> Prev
+                            </button>
+                            <button class="btn btn-outline btn-sm" id="newsNextBtn" onclick="newsChangePage(1)">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- News Create/Edit Modal -->
+            <div id="newsModal" class="modal" style="display:none;">
+                <div class="modal-overlay" onclick="closeNewsModal()"></div>
+                <div class="modal-container" style="max-width:700px;width:95%;">
+                    <div class="modal-header">
+                        <h3 id="newsModalTitle">New Post</h3>
+                        <button class="modal-close" onclick="closeNewsModal()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="newsForm" onsubmit="submitNewsForm(event)">
+                            <input type="hidden" id="newsPostId" value="" />
+
+                            <div class="form-group">
+                                <label for="newsTitle">Title <span class="required">*</span></label>
+                                <input type="text" id="newsTitle" class="form-control" required maxlength="200" />
+                            </div>
+
+                            <div class="form-row" style="display:flex;gap:1rem;">
+                                <div class="form-group" style="flex:1;">
+                                    <label for="newsCategory">Category</label>
+                                    <select id="newsCategory" class="form-control">
+                                        <option value="general">General</option>
+                                        <option value="announcement">Announcement</option>
+                                        <option value="event">Event</option>
+                                        <option value="welfare">Welfare</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex:1;">
+                                    <label for="newsStatus">Status</label>
+                                    <select id="newsStatus" class="form-control">
+                                        <option value="draft">Draft</option>
+                                        <option value="published">Published</option>
+                                        <option value="archived">Archived</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newsExcerpt">Excerpt</label>
+                                <textarea id="newsExcerpt" class="form-control" rows="2" maxlength="300"
+                                    placeholder="Short summary shown in listings..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="newsContent">Content <span class="required">*</span></label>
+                                <textarea id="newsContent" class="form-control" rows="8" required
+                                    placeholder="Write the full post content here..."></textarea>
+                            </div>
+
+                            <!-- Image upload with drag-and-drop -->
+                            <div class="form-group">
+                                <label>Cover Image <span style="color:#888;font-size:.85em;">(JPEG/PNG/WebP/GIF, max 5 MB)</span></label>
+                                <div id="newsDropZone"
+                                    style="border:2px dashed #ccc;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color .2s;"
+                                    ondragover="newsDragOver(event)" ondragleave="newsDragLeave(event)" ondrop="newsDrop(event)"
+                                    onclick="document.getElementById('newsCoverInput').click()">
+                                    <div id="newsDropContent">
+                                        <i class="fas fa-cloud-upload-alt" style="font-size:2rem;color:#aaa;"></i>
+                                        <p style="margin:.5rem 0 0;color:#888;">Drag &amp; drop an image here, or click to browse</p>
+                                    </div>
+                                    <img id="newsImagePreview" src="" alt="Preview"
+                                        style="display:none;max-height:160px;border-radius:6px;margin-top:.5rem;" />
+                                </div>
+                                <input type="file" id="newsCoverInput" accept="image/jpeg,image/png,image/webp,image/gif"
+                                    style="display:none;" onchange="newsFileSelected(this.files[0])" />
+                                <button type="button" id="newsRemoveImageBtn" class="btn btn-sm btn-outline-danger"
+                                    style="display:none;margin-top:.5rem;" onclick="newsRemoveImage()">
+                                    <i class="fas fa-trash"></i> Remove image
+                                </button>
+                            </div>
+
+                            <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:.75rem;padding-top:1rem;">
+                                <button type="button" class="btn btn-outline" onclick="closeNewsModal()">Cancel</button>
+                                <button type="submit" class="btn btn-primary" id="newsSubmitBtn">
+                                    <i class="fas fa-save"></i> Save Post
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
             <!-- Settings Section -->
             <section id="settingsSection" class="section-content">
                 <div class="data-section">
@@ -1743,6 +1894,7 @@
                 events: 'Event Management',
                 reminders: 'Reminder Management',
                 reports: 'Reports & Analytics',
+                news: 'News & Announcements',
                 settings: 'System Settings',
                 system: 'System Information'
             };
@@ -1753,6 +1905,7 @@
                 events: 'View and manage special dates and events',
                 reminders: 'Configure and send automated reminders',
                 reports: 'Generate reports and analytics',
+                news: 'Publish and manage news posts and announcements',
                 settings: 'Configure system settings',
                 system: 'Monitor system health and performance'
             };
@@ -1879,6 +2032,9 @@
                     break;
                 case 'system':
                     checkSystemHealth();
+                    break;
+                case 'news':
+                    loadNewsTable();
                     break;
             }
         }
@@ -2475,6 +2631,290 @@
             loadEventsTable();
             generateCalendar();
             showNotification('Events refreshed', 'success');
+        }
+
+        // ==================== NEWS MANAGEMENT ====================
+
+        const NewsState = {
+            posts: [],
+            page: 1,
+            limit: 10,
+            total: 0,
+            totalPages: 1,
+            pendingFile: null,
+            removeExistingImage: false
+        };
+
+        async function loadNewsTable() {
+            const search = document.getElementById('newsSearch')?.value || '';
+            const status = document.getElementById('newsStatusFilter')?.value || '';
+            const category = document.getElementById('newsCategoryFilter')?.value || '';
+
+            const params = { page: NewsState.page, limit: NewsState.limit };
+            if (search) params.search = search;
+            if (status) params.status = status;
+            if (category) params.category = category;
+
+            try {
+                const qs = new URLSearchParams(params).toString();
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`/api/news?${qs}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to load news');
+
+                NewsState.posts = data.posts || [];
+                NewsState.total = data.pagination?.total || 0;
+                NewsState.totalPages = data.pagination?.totalPages || 1;
+
+                renderNewsTable(NewsState.posts);
+                updateNewsPagination();
+                document.getElementById('newsBadge').textContent = NewsState.total;
+            } catch (err) {
+                document.getElementById('newsTableBody').innerHTML =
+                    `<tr><td colspan="7" class="text-center text-danger">${err.message}</td></tr>`;
+            }
+        }
+
+        function renderNewsTable(posts) {
+            const tbody = document.getElementById('newsTableBody');
+            if (!posts.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">No posts found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = posts.map(p => {
+                const coverHtml = p.coverImage
+                    ? `<img src="${p.coverImage}" alt="" style="width:56px;height:40px;object-fit:cover;border-radius:4px;" />`
+                    : `<span style="color:#ccc;font-size:1.5rem;"><i class="fas fa-image"></i></span>`;
+                const statusClass = p.status === 'published' ? 'status-active'
+                    : p.status === 'draft' ? 'status-inactive' : 'status-pending';
+                const dateStr = new Date(p.createdAt).toLocaleDateString();
+                const authorName = p.author?.fullName || 'Unknown';
+                return `<tr>
+                    <td style="text-align:center;">${coverHtml}</td>
+                    <td>${escapeHtml(p.title)}</td>
+                    <td><span class="badge">${escapeHtml(p.category)}</span></td>
+                    <td><span class="status-badge ${statusClass}">${p.status}</span></td>
+                    <td>${escapeHtml(authorName)}</td>
+                    <td>${dateStr}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-outline" title="Edit" onclick="openNewsModal('${p.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" title="Delete" onclick="confirmDeleteNews('${p.id}', '${escapeHtml(p.title).replace(/'/g, "\\'")}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updateNewsPagination() {
+            const info = document.getElementById('newsPageInfo');
+            const prevBtn = document.getElementById('newsPrevBtn');
+            const nextBtn = document.getElementById('newsNextBtn');
+            const start = Math.min((NewsState.page - 1) * NewsState.limit + 1, NewsState.total);
+            const end = Math.min(NewsState.page * NewsState.limit, NewsState.total);
+            if (info) info.textContent = NewsState.total
+                ? `Showing ${start}–${end} of ${NewsState.total} posts`
+                : 'No posts';
+            if (prevBtn) prevBtn.disabled = NewsState.page <= 1;
+            if (nextBtn) nextBtn.disabled = NewsState.page >= NewsState.totalPages;
+        }
+
+        function newsChangePage(delta) {
+            const next = NewsState.page + delta;
+            if (next < 1 || next > NewsState.totalPages) return;
+            NewsState.page = next;
+            loadNewsTable();
+        }
+
+        function filterNews() {
+            NewsState.page = 1;
+            loadNewsTable();
+        }
+
+        async function openNewsModal(id) {
+            newsResetForm();
+            document.getElementById('newsModal').style.display = 'flex';
+
+            if (id) {
+                document.getElementById('newsModalTitle').textContent = 'Edit Post';
+                document.getElementById('newsSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Update Post';
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const res = await fetch(`/api/news/${id}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const post = await res.json();
+                    if (!res.ok) throw new Error(post.error || 'Failed to load post');
+
+                    document.getElementById('newsPostId').value = post.id;
+                    document.getElementById('newsTitle').value = post.title;
+                    document.getElementById('newsExcerpt').value = post.excerpt || '';
+                    document.getElementById('newsContent').value = post.content;
+                    document.getElementById('newsCategory').value = post.category || 'general';
+                    document.getElementById('newsStatus').value = post.status || 'draft';
+
+                    if (post.coverImage) {
+                        const preview = document.getElementById('newsImagePreview');
+                        const dropContent = document.getElementById('newsDropContent');
+                        preview.src = post.coverImage;
+                        preview.style.display = 'block';
+                        if (dropContent) dropContent.style.display = 'none';
+                        document.getElementById('newsRemoveImageBtn').style.display = 'inline-flex';
+                    }
+                } catch (err) {
+                    showNotification(err.message, 'error');
+                    closeNewsModal();
+                }
+            }
+        }
+
+        function closeNewsModal() {
+            document.getElementById('newsModal').style.display = 'none';
+            newsResetForm();
+        }
+
+        function newsResetForm() {
+            document.getElementById('newsForm').reset();
+            document.getElementById('newsPostId').value = '';
+            document.getElementById('newsModalTitle').textContent = 'New Post';
+            document.getElementById('newsSubmitBtn').innerHTML = '<i class="fas fa-save"></i> Save Post';
+            document.getElementById('newsImagePreview').style.display = 'none';
+            document.getElementById('newsImagePreview').src = '';
+            document.getElementById('newsDropContent').style.display = 'block';
+            document.getElementById('newsRemoveImageBtn').style.display = 'none';
+            document.getElementById('newsCoverInput').value = '';
+            NewsState.pendingFile = null;
+            NewsState.removeExistingImage = false;
+            const dz = document.getElementById('newsDropZone');
+            if (dz) dz.style.borderColor = '#ccc';
+        }
+
+        async function submitNewsForm(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('newsSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                const id = document.getElementById('newsPostId').value;
+                const token = localStorage.getItem('authToken');
+
+                const formData = new FormData();
+                formData.append('title', document.getElementById('newsTitle').value.trim());
+                formData.append('content', document.getElementById('newsContent').value);
+                formData.append('excerpt', document.getElementById('newsExcerpt').value.trim());
+                formData.append('category', document.getElementById('newsCategory').value);
+                formData.append('status', document.getElementById('newsStatus').value);
+
+                if (NewsState.pendingFile) {
+                    formData.append('coverImage', NewsState.pendingFile);
+                }
+
+                const url = id ? `/api/news/${id}` : '/api/news';
+                const method = id ? 'PUT' : 'POST';
+
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.error || 'Failed to save post');
+
+                showNotification(id ? 'Post updated successfully' : 'Post created successfully', 'success');
+                closeNewsModal();
+                NewsState.page = 1;
+                loadNewsTable();
+            } catch (err) {
+                showNotification(err.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Save Post';
+            }
+        }
+
+        async function confirmDeleteNews(id, title) {
+            if (!confirm(`Delete post "${title}"? This cannot be undone.`)) return;
+            try {
+                const token = localStorage.getItem('authToken');
+                const res = await fetch(`/api/news/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to delete post');
+                showNotification('Post deleted', 'success');
+                loadNewsTable();
+            } catch (err) {
+                showNotification(err.message, 'error');
+            }
+        }
+
+        // Drag-and-drop image upload
+        function newsDragOver(event) {
+            event.preventDefault();
+            document.getElementById('newsDropZone').style.borderColor = '#4a90d9';
+        }
+
+        function newsDragLeave(event) {
+            document.getElementById('newsDropZone').style.borderColor = '#ccc';
+        }
+
+        function newsDrop(event) {
+            event.preventDefault();
+            document.getElementById('newsDropZone').style.borderColor = '#ccc';
+            const file = event.dataTransfer.files[0];
+            if (file) newsFileSelected(file);
+        }
+
+        function newsFileSelected(file) {
+            if (!file) return;
+            const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+            if (!allowed.includes(file.type)) {
+                showNotification('Only JPEG, PNG, WebP, and GIF images are allowed', 'error');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('Image must be smaller than 5 MB', 'error');
+                return;
+            }
+
+            NewsState.pendingFile = file;
+            NewsState.removeExistingImage = false;
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                const preview = document.getElementById('newsImagePreview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                document.getElementById('newsDropContent').style.display = 'none';
+                document.getElementById('newsRemoveImageBtn').style.display = 'inline-flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function newsRemoveImage() {
+            NewsState.pendingFile = null;
+            NewsState.removeExistingImage = true;
+            document.getElementById('newsImagePreview').style.display = 'none';
+            document.getElementById('newsImagePreview').src = '';
+            document.getElementById('newsDropContent').style.display = 'block';
+            document.getElementById('newsRemoveImageBtn').style.display = 'none';
+            document.getElementById('newsCoverInput').value = '';
+        }
+
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
     </script>
     <script type="module" src="/js/supabaseClient.js"></script>

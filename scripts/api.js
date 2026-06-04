@@ -414,6 +414,54 @@ const ApiService = {
         });
     },
 
+    // News management
+    async getNews(params = {}) {
+        const qs = new URLSearchParams(
+            Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ''))
+        ).toString();
+        return makeRequest(`news${qs ? '?' + qs : ''}`);
+    },
+
+    async getNewsPost(id) {
+        return makeRequest(`news/${id}`);
+    },
+
+    async createNews(data) {
+        if (data instanceof FormData) {
+            return makeRequest('news', {
+                method: 'POST',
+                headers: getAuthHeaders(null),
+                body: data
+            });
+        }
+        return makeRequest('news', { method: 'POST', body: JSON.stringify(data) });
+    },
+
+    async updateNews(id, data) {
+        if (data instanceof FormData) {
+            return makeRequest(`news/${id}`, {
+                method: 'PUT',
+                headers: getAuthHeaders(null),
+                body: data
+            });
+        }
+        return makeRequest(`news/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    },
+
+    async deleteNews(id) {
+        return makeRequest(`news/${id}`, { method: 'DELETE' });
+    },
+
+    async uploadNewsImage(id, file) {
+        const formData = new FormData();
+        formData.append('coverImage', file);
+        return makeRequest(`news/${id}/image`, {
+            method: 'POST',
+            headers: getAuthHeaders(null),
+            body: formData
+        });
+    },
+
     // Health check
     async healthCheck() {
         try {

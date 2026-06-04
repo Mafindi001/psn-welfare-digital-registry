@@ -15,6 +15,7 @@ const adminRoutes = require('./routes/admin');
 const reportRoutes = require('./routes/reports');
 const backupRoutes = require('./routes/backup');
 const auditRoutes = require('./routes/audit');
+const newsRoutes = require('./src/routes/news');
 
 // Import middleware
 const { errorHandler } = require('./middleware/errorHandler');
@@ -98,9 +99,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/news', newsRoutes);
 
-// Static files for reports
+// Static files for reports and uploads
 app.use('/reports', express.static('reports'));
+app.use('/uploads', express.static('uploads'));
 
 // Error handling
 app.use(notFound);

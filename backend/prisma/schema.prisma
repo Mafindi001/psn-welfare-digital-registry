@@ -116,5 +116,27 @@ model Member {
   addedIPs          IPWhitelist[]    @relation("AddedIPs")
   updatedIPs        IPWhitelist[]    @relation("UpdatedIPs")
   
+  // News relations
+  newsPosts         NewsPost[]
+
   // ... rest of model ...
+}
+
+// News / Announcements
+model NewsPost {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  excerpt     String?
+  category    String    @default("general")
+  status      String    @default("draft")
+  coverImage  String?
+  authorId    String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  author      Member    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("news_posts")
 }
