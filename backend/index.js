@@ -6,21 +6,21 @@ const rateLimit = require('express-rate-limit');
 const { PrismaClient } = require('@prisma/client');
 const http = require('http');
 const { WebSocketServer } = require('ws');
-const logger = require('./utils/logger');
+const logger = require('./src/utils/logger');
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const memberRoutes = require('./routes/members');
-const adminRoutes = require('./routes/admin');
-const reportRoutes = require('./routes/reports');
-const backupRoutes = require('./routes/backup');
-const auditRoutes = require('./routes/audit');
+const authRoutes = require('./src/routes/auth');
+const memberRoutes = require('./src/routes/members');
+const adminRoutes = require('./src/routes/admin');
+const reportRoutes = require('./src/routes/reports');
+const backupRoutes = require('./src/routes/backup');
+const auditRoutes = require('./src/routes/audit');
 const newsRoutes = require('./src/routes/news');
 
 // Import middleware
-const { errorHandler } = require('./middleware/errorHandler');
-const { notFound } = require('./middleware/notFound');
-const { setupWebSocket } = require('./services/websocketService');
+const { errorHandler } = require('./src/middleware/errorHandler');
+const { notFound } = require('./src/middleware/notFound');
+const { setupWebSocket } = require('./src/services/websocketService');
 
 // Initialize app
 const app = express();
