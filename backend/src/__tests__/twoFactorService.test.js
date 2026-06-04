@@ -377,6 +377,99 @@ describe('maskPhone', () => {
     });
 });
 
+// ─── sendSmsCode ──────────────────────────────────────────────────────────────
+
+describe('sendSmsCode', () => {
+    it('creates an SMS code record in the database', async () => {
+        prisma.twoFactorSmsCode.create.mockResolvedValue({ id: 'sms-new' });
+        prisma.auditLog.create.mockResolvedValue({});
+
+        await twoFactorService.sendSmsCode('user-1', '+2348012345678');
+
+        expect(prisma.twoFactorSmsCode.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    userId: 'user-1',
+                    phoneNumber: '+2348012345678',
+                }),
+            })
+        );
+    });
+
+    it('sets expiry to 10 minutes from now', async () => {
+        prisma.twoFactorSmsCode.create.mockResolvedValue({});
+        prisma.auditLog.create.mockResolvedValue({});
+        const before = Date.now();
+
+        await twoFactorService.sendSmsCode('user-1', '+2348012345678');
+
+        const createCall = prisma.twoFactorSmsCode.create.mock.calls[0][0];
+        const expiresAt = createCall.data.expiresAt.getTime();
+        const tenMinutes = 10 * 60 * 1000;
+
+        expect(expiresAt - before).toBeGreaterThanOrEqual(tenMinutes - 100);
+        expect(expiresAt - before).toBeLessThanOrEqual(tenMinutes + 1000);
+    });
+
+    it('generates a 6-digit numeric code', async () => {
+        let capturedCode;
+        prisma.twoFactorSmsCode.create.mockImplementation(args => {
+            capturedCode = args.data.code;
+            return Promise.resolve({});
+        });
+        prisma.auditLog.create.mockResolvedValue({});
+
+        await twoFactorService.sendSmsCode('user-1', '+2348012345678');
+
+        expect(capturedCode).toMatch(/^\d{6}$/);
+    });
+
+    it('writes a 2FA_SMS_SENT audit log entry with masked phone', async () => {
+        prisma.twoFactorSmsCode.create.mockResolvedValue({});
+        prisma.auditLog.create.mockResolvedValue({});
+
+        await twoFactorService.sendSmsCode('user-1', '+2348012345678');
+
+        expect(prisma.auditLog.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({ action: '2FA_SMS_SENT' }),
+            })
+        );
+        const auditCall = prisma.auditLog.create.mock.calls[0][0];
+        // Phone should be masked in the audit details, not the raw number
+        expect(auditCall.data.details.phoneNumber).not.toBe('+2348012345678');
+    });
+
+    it('exposes the plaintext code in development mode', async () => {
+        process.env.NODE_ENV = 'development';
+        prisma.twoFactorSmsCode.create.mockResolvedValue({});
+        prisma.auditLog.create.mockResolvedValue({});
+
+        const result = await twoFactorService.sendSmsCode('user-1', '+2348012345678');
+
+        expect(result.success).toBe(true);
+        expect(result.code).toMatch(/^\d{6}$/);
+        process.env.NODE_ENV = 'test';
+    });
+
+    it('does not expose the code outside development mode', async () => {
+        process.env.NODE_ENV = 'production';
+        prisma.twoFactorSmsCode.create.mockResolvedValue({});
+        prisma.auditLog.create.mockResolvedValue({});
+
+        const result = await twoFactorService.sendSmsCode('user-1', '+2348012345678');
+
+        expect(result.code).toBeUndefined();
+        process.env.NODE_ENV = 'test';
+    });
+
+    it('propagates errors from the database', async () => {
+        prisma.twoFactorSmsCode.create.mockRejectedValue(new Error('DB failure'));
+
+        await expect(twoFactorService.sendSmsCode('user-1', '+234')).rejects.toThrow('DB failure');
+    });
+});
+
 // ─── getStatus ────────────────────────────────────────────────────────────────
 
 describe('getStatus', () => {

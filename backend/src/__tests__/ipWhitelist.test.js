@@ -236,6 +236,182 @@ describe('middleware', () => {
     });
 });
 
+// ─── loadWhitelist ────────────────────────────────────────────────────────────
+
+describe('loadWhitelist', () => {
+    it('populates the regular whitelist from enabled DB entries', async () => {
+        prisma.ipWhitelist.findMany.mockResolvedValue([
+            { ipAddress: '10.0.0.1', isAdminIP: false, enabled: true },
+        ]);
+
+        await ipWhitelist.loadWhitelist();
+
+        expect(ipWhitelist.whitelist.has('10.0.0.1')).toBe(true);
+        expect(ipWhitelist.adminIPs.has('10.0.0.1')).toBe(false);
+    });
+
+    it('populates the adminIPs set for entries with isAdminIP:true', async () => {
+        prisma.ipWhitelist.findMany.mockResolvedValue([
+            { ipAddress: '192.168.1.1', isAdminIP: true, enabled: true },
+        ]);
+
+        await ipWhitelist.loadWhitelist();
+
+        expect(ipWhitelist.adminIPs.has('192.168.1.1')).toBe(true);
+        expect(ipWhitelist.whitelist.has('192.168.1.1')).toBe(false);
+    });
+
+    it('clears stale entries on each reload', async () => {
+        prisma.ipWhitelist.findMany.mockResolvedValueOnce([
+            { ipAddress: '1.1.1.1', isAdminIP: false, enabled: true },
+        ]);
+        await ipWhitelist.loadWhitelist();
+
+        // Second load returns different IPs
+        prisma.ipWhitelist.findMany.mockResolvedValueOnce([
+            { ipAddress: '2.2.2.2', isAdminIP: false, enabled: true },
+        ]);
+        await ipWhitelist.loadWhitelist();
+
+        expect(ipWhitelist.whitelist.has('1.1.1.1')).toBe(false);
+        expect(ipWhitelist.whitelist.has('2.2.2.2')).toBe(true);
+    });
+});
+
+// ─── addIP ────────────────────────────────────────────────────────────────────
+
+describe('addIP', () => {
+    beforeEach(() => {
+        prisma.ipWhitelist.findMany.mockResolvedValue([]); // for the loadWhitelist call inside addIP
+        prisma.auditLog.create.mockResolvedValue({});
+    });
+
+    it('creates a new entry when the IP does not already exist', async () => {
+        prisma.ipWhitelist.findUnique.mockResolvedValue(null);
+        prisma.ipWhitelist.create.mockResolvedValue({});
+
+        const result = await ipWhitelist.addIP('5.5.5.5', false, 'test note', 'admin-1');
+
+        expect(result.success).toBe(true);
+        expect(prisma.ipWhitelist.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    ipAddress: '5.5.5.5',
+                    isAdminIP: false,
+                    enabled: true,
+                    addedBy: 'admin-1',
+                }),
+            })
+        );
+    });
+
+    it('updates an existing (disabled) entry when the IP already exists', async () => {
+        prisma.ipWhitelist.findUnique.mockResolvedValue({ ipAddress: '5.5.5.5', enabled: false });
+        prisma.ipWhitelist.update.mockResolvedValue({});
+
+        await ipWhitelist.addIP('5.5.5.5', true, 'admin IP', 'admin-1');
+
+        expect(prisma.ipWhitelist.update).toHaveBeenCalled();
+        expect(prisma.ipWhitelist.create).not.toHaveBeenCalled();
+    });
+
+    it('writes an IP_WHITELIST_ADDED audit log entry', async () => {
+        prisma.ipWhitelist.findUnique.mockResolvedValue(null);
+        prisma.ipWhitelist.create.mockResolvedValue({});
+
+        await ipWhitelist.addIP('6.6.6.6', false, '', 'admin-1');
+
+        expect(prisma.auditLog.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({ action: 'IP_WHITELIST_ADDED' }),
+            })
+        );
+    });
+
+    it('propagates DB errors', async () => {
+        prisma.ipWhitelist.findUnique.mockRejectedValue(new Error('DB error'));
+
+        await expect(ipWhitelist.addIP('7.7.7.7', false, '', 'admin')).rejects.toThrow('DB error');
+    });
+});
+
+// ─── removeIP ─────────────────────────────────────────────────────────────────
+
+describe('removeIP', () => {
+    beforeEach(() => {
+        prisma.ipWhitelist.findMany.mockResolvedValue([]);
+        prisma.auditLog.create.mockResolvedValue({});
+    });
+
+    it('marks the entry as disabled', async () => {
+        prisma.ipWhitelist.update.mockResolvedValue({});
+
+        const result = await ipWhitelist.removeIP('5.5.5.5', 'admin-1');
+
+        expect(result.success).toBe(true);
+        expect(prisma.ipWhitelist.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                where: { ipAddress: '5.5.5.5' },
+                data: expect.objectContaining({ enabled: false }),
+            })
+        );
+    });
+
+    it('writes an IP_WHITELIST_REMOVED audit log entry', async () => {
+        prisma.ipWhitelist.update.mockResolvedValue({});
+
+        await ipWhitelist.removeIP('5.5.5.5', 'admin-1');
+
+        expect(prisma.auditLog.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({ action: 'IP_WHITELIST_REMOVED' }),
+            })
+        );
+    });
+});
+
+// ─── listWhitelist ────────────────────────────────────────────────────────────
+
+describe('listWhitelist', () => {
+    it('returns active whitelist entries from the database', async () => {
+        const entries = [
+            { id: 'w-1', ipAddress: '1.1.1.1', addedByUser: { fullName: 'Admin' } },
+        ];
+        prisma.ipWhitelist.findMany.mockResolvedValue(entries);
+
+        const result = await ipWhitelist.listWhitelist();
+
+        expect(result).toEqual(entries);
+        expect(prisma.ipWhitelist.findMany).toHaveBeenCalledWith(
+            expect.objectContaining({ where: { enabled: true } })
+        );
+    });
+
+    it('propagates errors from the database', async () => {
+        prisma.ipWhitelist.findMany.mockRejectedValue(new Error('list failed'));
+
+        await expect(ipWhitelist.listWhitelist()).rejects.toThrow('list failed');
+    });
+});
+
+// ─── getWhitelistStats ────────────────────────────────────────────────────────
+
+describe('getWhitelistStats', () => {
+    it('returns totalActive, adminIPs, and inactive counts', async () => {
+        prisma.$transaction.mockResolvedValue([10, 3, 2]);
+
+        const stats = await ipWhitelist.getWhitelistStats();
+
+        expect(stats).toEqual({ totalActive: 10, adminIPs: 3, inactive: 2 });
+    });
+
+    it('propagates database errors', async () => {
+        prisma.$transaction.mockRejectedValue(new Error('tx failed'));
+
+        await expect(ipWhitelist.getWhitelistStats()).rejects.toThrow('tx failed');
+    });
+});
+
 // ─── getClientIP ──────────────────────────────────────────────────────────────
 
 describe('getClientIP', () => {

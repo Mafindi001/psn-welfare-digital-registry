@@ -191,6 +191,94 @@ describe('sendBulkEmails', () => {
     });
 });
 
+// ─── sendWelcomeEmail ─────────────────────────────────────────────────────────
+
+describe('sendWelcomeEmail', () => {
+    beforeEach(() => {
+        emailService.createDefaultTemplates();
+        emailService.transporter = {
+            sendMail: jest.fn().mockResolvedValue({ messageId: 'welcome-msg' }),
+        };
+    });
+
+    it('calls sendEmail with the welcome template and member data', async () => {
+        const member = {
+            email: 'alice@example.com',
+            fullName: 'Alice',
+            psnNumber: 'PSN-001',
+        };
+
+        const result = await emailService.sendWelcomeEmail(member);
+
+        expect(result.success).toBe(true);
+        expect(emailService.transporter.sendMail).toHaveBeenCalledWith(
+            expect.objectContaining({ to: 'alice@example.com' })
+        );
+    });
+
+    it('includes a temporary password in the email when provided', async () => {
+        const member = { email: 'bob@example.com', fullName: 'Bob', psnNumber: 'P2' };
+        let capturedOptions;
+        emailService.transporter.sendMail = jest.fn().mockImplementation(opts => {
+            capturedOptions = opts;
+            return Promise.resolve({ messageId: 'x' });
+        });
+
+        await emailService.sendWelcomeEmail(member, 'TempPass@123');
+
+        expect(capturedOptions.html).toContain('TempPass@123');
+    });
+});
+
+// ─── sendReminderEmail ────────────────────────────────────────────────────────
+
+describe('sendReminderEmail', () => {
+    beforeEach(() => {
+        emailService.createDefaultTemplates();
+        emailService.transporter = {
+            sendMail: jest.fn().mockResolvedValue({ messageId: 'reminder-msg' }),
+        };
+    });
+
+    it('calls sendEmail with the reminder template and event data', async () => {
+        const reminderData = {
+            recipientEmail: 'carol@example.com',
+            memberName: 'Carol',
+            eventType: 'Birthday',
+            eventTitle: "Carol's Birthday",
+            eventDate: new Date('2025-06-15').toISOString(),
+            daysUntil: 5,
+        };
+
+        const result = await emailService.sendReminderEmail(reminderData);
+
+        expect(result.success).toBe(true);
+        expect(emailService.transporter.sendMail).toHaveBeenCalledWith(
+            expect.objectContaining({ to: 'carol@example.com' })
+        );
+    });
+
+    it('formats the event date as a locale string', async () => {
+        let capturedOptions;
+        emailService.transporter.sendMail = jest.fn().mockImplementation(opts => {
+            capturedOptions = opts;
+            return Promise.resolve({ messageId: 'x' });
+        });
+
+        await emailService.sendReminderEmail({
+            recipientEmail: 'x@example.com',
+            memberName: 'X',
+            eventType: 'Anniversary',
+            eventTitle: 'Wedding Anniversary',
+            eventDate: new Date('2025-01-01').toISOString(),
+            daysUntil: 7,
+        });
+
+        // The date should be a human-readable string, not an ISO timestamp
+        expect(capturedOptions.html).not.toContain('2025-01-01T');
+    });
+});
+
 // ─── Default templates ────────────────────────────────────────────────────────
 
 describe('createDefaultTemplates', () => {

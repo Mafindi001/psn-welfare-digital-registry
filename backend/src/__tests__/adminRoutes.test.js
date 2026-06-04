@@ -339,11 +339,65 @@ describe('GET /api/admin/audit-logs', () => {
         expect(capturedWhere.action).toBe('LOGIN');
     });
 
+    it('adds an OR search clause when search param is provided', async () => {
+        let capturedWhere;
+        mockPrisma.auditLog.findMany = jest.fn().mockImplementation(args => {
+            capturedWhere = args.where;
+            return Promise.resolve([]);
+        });
+        mockPrisma.auditLog.count = jest.fn().mockResolvedValue(0);
+        mockPrisma.$transaction.mockImplementation(async queries => Promise.all(queries));
+
+        await request(buildApp()).get('/api/admin/audit-logs?search=Alice');
+
+        expect(capturedWhere.OR).toBeDefined();
+        expect(capturedWhere.OR.length).toBeGreaterThan(0);
+    });
+
     it('returns 500 on database error', async () => {
         mockPrisma.$transaction.mockRejectedValue(new Error('DB error'));
 
         const res = await request(buildApp()).get('/api/admin/audit-logs');
 
         expect(res.status).toBe(500);
+    });
+});
+
+// ─── GET /api/admin/monitoring/active-users ───────────────────────────────────
+
+describe('GET /api/admin/monitoring/active-users', () => {
+    it('returns the list of users active in the last 15 minutes', async () => {
+        const activeUsers = [
+            { id: 'u1', fullName: 'Alice', psnNumber: 'P1', lastActivity: new Date(), isAdmin: false },
+        ];
+        mockPrisma.member.findMany.mockResolvedValue(activeUsers);
+
+        const res = await request(buildApp()).get('/api/admin/monitoring/active-users');
+
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveLength(1);
+        expect(res.body[0].fullName).toBe('Alice');
+    });
+
+    it('filters by isActive:true and lastActivity within 15 minutes', async () => {
+        let capturedWhere;
+        mockPrisma.member.findMany = jest.fn().mockImplementation(args => {
+            capturedWhere = args.where;
+            return Promise.resolve([]);
+        });
+
+        await request(buildApp()).get('/api/admin/monitoring/active-users');
+
+        expect(capturedWhere.isActive).toBe(true);
+        expect(capturedWhere.lastActivity.gte).toBeDefined();
+    });
+
+    it('returns 500 on database error', async () => {
+        mockPrisma.member.findMany = jest.fn().mockRejectedValue(new Error('query failed'));
+
+        const res = await request(buildApp()).get('/api/admin/monitoring/active-users');
+
+        expect(res.status).toBe(500);
+        expect(res.body.error).toBe('query failed');
     });
 });
