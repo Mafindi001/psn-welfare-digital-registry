@@ -1,0 +1,55 @@
+{
+  "name": "psn-welfare-registry-backend",
+  "version": "1.0.0",
+  "description": "PSN Taraba Welfare Registry Backend API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest --forceExit",
+    "test:coverage": "jest --coverage --forceExit",
+    "test:watch": "jest --watch"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.0.0",
+    "aws-sdk": "^2.1000.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "express-rate-limit": "^6.0.0",
+    "handlebars": "^4.7.9",
+    "helmet": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^1.4.4",
+    "nodemailer": "^6.10.1",
+    "prisma": "^5.0.0",
+    "qrcode": "^1.5.4",
+    "speakeasy": "^2.0.0",
+    "winston": "^3.19.0",
+    "ws": "^8.11.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^6.3.4"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/**/__mocks__/**"
+    ],
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "clover"
+    ],
+    "testTimeout": 10000
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

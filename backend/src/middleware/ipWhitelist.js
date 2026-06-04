@@ -123,7 +123,7 @@ class IPWhitelist {
 
             const ipLong = this.ipToLong(ip);
             const rangeIPLong = this.ipToLong(rangeIP);
-            const maskLong = this.ipToLong(mask);
+            const maskLong = mask; // cidrToMask already returns a Long integer
 
             return (ipLong & maskLong) === (rangeIPLong & maskLong);
         }
