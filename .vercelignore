@@ -1,0 +1,19 @@
+# Dependencies — Vercel installs its own
+node_modules
+
+# Standalone Express backend — not deployed via Vercel (host separately)
+backend
+
+# Environment / secrets — set these in Vercel → Project Settings → Environment Variables
+.env
+.env.*
+.env.production
+
+# Local Vercel link metadata
+.vercel
+
+# Misc / non-deploy artifacts
+*.zip
+PSN.zip
+playground-1.mongodb.js
+ecosystem.config.js
