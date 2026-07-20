@@ -23,7 +23,15 @@ const AdminState = {
     },
     currentMonth: new Date().getMonth(),
     currentYear: new Date().getFullYear(),
-    isLoading: false
+    isLoading: false,
+    news: {
+        posts: [],
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1,
+        pendingFile: null
+    }
 };
 
 // DOM Elements cache
@@ -117,6 +125,7 @@ function cacheAdminElements() {
         'reminder-logs': document.getElementById('reminder-logs-section'),
         'upcoming-events': document.getElementById('upcoming-events-section'),
         'reports': document.getElementById('reports-section'),
+        'news': document.getElementById('newsSection'),
         'system-logs': document.getElementById('system-logs-section'),
         'settings': document.getElementById('settings-section')
     };
@@ -987,6 +996,7 @@ function showSection(section) {
             'reminder-logs': 'Reminder Logs',
             'upcoming-events': 'Upcoming Events',
             'reports': 'Reports & Analytics',
+            'news': 'News & Announcements',
             'system-logs': 'System Audit Logs',
             'settings': 'System Settings'
         };
@@ -998,6 +1008,7 @@ function showSection(section) {
             'reminder-logs': 'Track and manage reminder delivery',
             'upcoming-events': 'View upcoming celebrations',
             'reports': 'Generate reports and analytics',
+            'news': 'Publish and manage news posts and announcements',
             'system-logs': 'System audit trail and security logs',
             'settings': 'Configure system settings'
         };
@@ -1382,6 +1393,123 @@ async function toggleMemberStatus(memberId, action) {
     }
 }
 
+// ==================== NEWS MANAGEMENT ====================
+
+async function loadNews() {
+    const { page, limit } = AdminState.news;
+    const search = document.getElementById('newsSearch')?.value || '';
+    const status = document.getElementById('newsStatusFilter')?.value || '';
+    const category = document.getElementById('newsCategoryFilter')?.value || '';
+
+    try {
+        const result = await ApiService.getNews({ page, limit, search, status, category });
+        if (!result.success) throw new Error(result.error || 'Failed to load news');
+
+        AdminState.news.posts = result.data.posts || [];
+        AdminState.news.total = result.data.pagination?.total || 0;
+        AdminState.news.totalPages = result.data.pagination?.totalPages || 1;
+
+        renderNewsTable(AdminState.news.posts);
+        updateNewsPagination();
+    } catch (error) {
+        showNotification(`Failed to load news: ${error.message}`, 'error');
+    }
+}
+
+function renderNewsTable(posts) {
+    const tbody = document.getElementById('newsTableBody');
+    if (!tbody) return;
+
+    if (!posts.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center">No posts found.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = posts.map(p => {
+        const cover = p.coverImage
+            ? `<img src="${p.coverImage}" alt="" style="width:56px;height:40px;object-fit:cover;border-radius:4px;">`
+            : '<i class="fas fa-image" style="color:#ccc;font-size:1.5rem;"></i>';
+        const statusClass = p.status === 'published' ? 'status-active'
+            : p.status === 'draft' ? 'status-inactive' : 'status-pending';
+        const dateStr = new Date(p.createdAt).toLocaleDateString();
+        const author = p.author?.fullName || 'Unknown';
+        return `<tr>
+            <td style="text-align:center;">${cover}</td>
+            <td>${p.title}</td>
+            <td><span class="badge">${p.category}</span></td>
+            <td><span class="status-badge ${statusClass}">${p.status}</span></td>
+            <td>${author}</td>
+            <td>${dateStr}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline" onclick="editNews('${p.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteNews('${p.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function updateNewsPagination() {
+    const { page, limit, total, totalPages } = AdminState.news;
+    const info = document.getElementById('newsPageInfo');
+    const prevBtn = document.getElementById('newsPrevBtn');
+    const nextBtn = document.getElementById('newsNextBtn');
+    const start = Math.min((page - 1) * limit + 1, total);
+    const end = Math.min(page * limit, total);
+    if (info) info.textContent = total ? `Showing ${start}–${end} of ${total}` : 'No posts';
+    if (prevBtn) prevBtn.disabled = page <= 1;
+    if (nextBtn) nextBtn.disabled = page >= totalPages;
+}
+
+async function editNews(id) {
+    try {
+        const result = await ApiService.getNewsPost(id);
+        if (!result.success) throw new Error(result.error || 'Failed to load post');
+        const post = result.data;
+
+        document.getElementById('newsPostId').value = post.id;
+        document.getElementById('newsTitle').value = post.title;
+        document.getElementById('newsExcerpt').value = post.excerpt || '';
+        document.getElementById('newsContent').value = post.content;
+        document.getElementById('newsCategory').value = post.category || 'general';
+        document.getElementById('newsStatus').value = post.status || 'draft';
+
+        if (post.coverImage) {
+            const preview = document.getElementById('newsImagePreview');
+            if (preview) {
+                preview.src = post.coverImage;
+                preview.style.display = 'block';
+            }
+            const dropContent = document.getElementById('newsDropContent');
+            if (dropContent) dropContent.style.display = 'none';
+            const removeBtn = document.getElementById('newsRemoveImageBtn');
+            if (removeBtn) removeBtn.style.display = 'inline-flex';
+        }
+
+        document.getElementById('newsModalTitle').textContent = 'Edit Post';
+        document.getElementById('newsModal').style.display = 'flex';
+    } catch (error) {
+        showNotification(`Failed to load post: ${error.message}`, 'error');
+    }
+}
+
+async function deleteNews(id) {
+    if (!confirm('Delete this news post? This cannot be undone.')) return;
+    try {
+        const result = await ApiService.deleteNews(id);
+        if (!result.success) throw new Error(result.error || 'Failed to delete post');
+        showNotification('Post deleted successfully', 'success');
+        loadNews();
+    } catch (error) {
+        showNotification(`Failed to delete post: ${error.message}`, 'error');
+    }
+}
+
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', initAdminDashboard);
 
@@ -1391,6 +1519,10 @@ window.viewMemberDetails = viewMemberDetails;
 window.editMember = editMember;
 window.toggleMemberStatus = toggleMemberStatus;
 window.clearMemberFilters = clearMemberFilters;
+window.loadNews = loadNews;
+window.editNews = editNews;
+window.deleteNews = deleteNews;
+window.renderNewsTable = renderNewsTable;
 
 // Export for Node.js/CommonJS
 if (typeof module !== 'undefined' && module.exports) {
@@ -1400,6 +1532,10 @@ if (typeof module !== 'undefined' && module.exports) {
         viewMemberDetails,
         editMember,
         toggleMemberStatus,
-        clearMemberFilters
+        clearMemberFilters,
+        loadNews,
+        editNews,
+        deleteNews,
+        renderNewsTable
     };
 }

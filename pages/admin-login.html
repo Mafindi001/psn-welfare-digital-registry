@@ -686,25 +686,87 @@
                 <!-- Admin Credentials Section -->
                 <div class="admin-credentials">
                     <h4><i class="fas fa-key"></i> Built-in Admin Credentials</h4>
-                    <div class="credential-item">
-                        <span class="credential-label">Email:</span>
-                        <span class="credential-value">admin@psntaraba.org.ng</span>
-                        <button class="credential-copy" onclick="copyToClipboard('admin@psntaraba.org.ng', this)">
-                            <i class="fas fa-copy"></i>
+
+                    <!-- Super Admin -->
+                    <div style="margin-bottom:1rem;padding:.75rem;background:#eef2fb;border-radius:8px;border-left:4px solid #2c5aa0;">
+                        <div style="font-weight:700;color:#2c5aa0;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;">
+                            <i class="fas fa-crown"></i> Super Administrator
+                        </div>
+                        <div class="credential-item">
+                            <span class="credential-label">Email:</span>
+                            <span class="credential-value">superadmin@psntaraba.org.ng</span>
+                            <button class="credential-copy" onclick="copyToClipboard('superadmin@psntaraba.org.ng', this)" title="Copy email">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copy-success">Copied!</span>
+                        </div>
+                        <div class="credential-item">
+                            <span class="credential-label">Password:</span>
+                            <span class="credential-value">PSN@SuperAdmin2025!</span>
+                            <button class="credential-copy" onclick="copyToClipboard('PSN@SuperAdmin2025!', this)" title="Copy password">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copy-success">Copied!</span>
+                        </div>
+                        <button type="button" class="auto-fill-btn" onclick="fillCredentials('superadmin@psntaraba.org.ng','PSN@SuperAdmin2025!')">
+                            <i class="fas fa-magic"></i> Auto-fill
                         </button>
-                        <span class="copy-success">Copied!</span>
                     </div>
-                    <div class="credential-item">
-                        <span class="credential-label">Password:</span>
-                        <span class="credential-value">PSNTaraba2025!</span>
-                        <button class="credential-copy" onclick="copyToClipboard('PSNTaraba2025!', this)">
-                            <i class="fas fa-copy"></i>
+
+                    <!-- Publicity Secretary -->
+                    <div style="margin-bottom:1rem;padding:.75rem;background:#f0faf0;border-radius:8px;border-left:4px solid #28a745;">
+                        <div style="font-weight:700;color:#28a745;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;">
+                            <i class="fas fa-bullhorn"></i> Publicity Secretary
+                        </div>
+                        <div class="credential-item">
+                            <span class="credential-label">Email:</span>
+                            <span class="credential-value">publicity@psntaraba.org.ng</span>
+                            <button class="credential-copy" onclick="copyToClipboard('publicity@psntaraba.org.ng', this)" title="Copy email">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copy-success">Copied!</span>
+                        </div>
+                        <div class="credential-item">
+                            <span class="credential-label">Password:</span>
+                            <span class="credential-value">PSN@Publicity2025!</span>
+                            <button class="credential-copy" onclick="copyToClipboard('PSN@Publicity2025!', this)" title="Copy password">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copy-success">Copied!</span>
+                        </div>
+                        <button type="button" class="auto-fill-btn" style="background:#28a745;" onclick="fillCredentials('publicity@psntaraba.org.ng','PSN@Publicity2025!')">
+                            <i class="fas fa-magic"></i> Auto-fill
                         </button>
-                        <span class="copy-success">Copied!</span>
                     </div>
+
+                    <!-- System Admin (legacy) -->
+                    <div style="padding:.75rem;background:#f8f9fa;border-radius:8px;border-left:4px solid #6c757d;">
+                        <div style="font-weight:700;color:#6c757d;margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem;">
+                            <i class="fas fa-user-shield"></i> System Administrator
+                        </div>
+                        <div class="credential-item">
+                            <span class="credential-label">Email:</span>
+                            <span class="credential-value">admin@psntaraba.org.ng</span>
+                            <button class="credential-copy" onclick="copyToClipboard('admin@psntaraba.org.ng', this)" title="Copy email">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copy-success">Copied!</span>
+                        </div>
+                        <div class="credential-item">
+                            <span class="credential-label">Password:</span>
+                            <span class="credential-value">PSNTaraba2025!</span>
+                            <button class="credential-copy" onclick="copyToClipboard('PSNTaraba2025!', this)" title="Copy password">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <span class="copy-success">Copied!</span>
+                        </div>
+                        <button type="button" class="auto-fill-btn" onclick="fillCredentials('admin@psntaraba.org.ng','PSNTaraba2025!')">
+                            <i class="fas fa-magic"></i> Auto-fill
+                        </button>
+                    </div>
+
                     <div class="form-text" style="margin-top: 1rem;">
-                        <i class="fas fa-info-circle"></i> These credentials work immediately after hosting.
-                        You can create additional admins later.
+                        <i class="fas fa-info-circle"></i> These credentials work immediately. Change passwords after first login.
                     </div>
                 </div>
 
@@ -726,22 +788,39 @@
         // ==================== BUILT-IN ADMIN CREDENTIALS ====================
         const BUILTIN_ADMINS = [
             {
+                email: 'superadmin@psntaraba.org.ng',
+                password: 'PSN@SuperAdmin2025!',
+                name: 'Super Administrator',
+                role: 'Super Administrator',
+                permissions: ['manage_members', 'view_reports', 'send_reminders', 'system_settings', 'data_export', 'audit_logs', 'user_management', 'manage_news', 'ip_whitelist', 'backup_restore']
+            },
+            {
                 email: 'admin@psntaraba.org.ng',
                 password: 'PSNTaraba2025!',
                 name: 'System Administrator',
+                role: 'System Administrator',
                 permissions: ['manage_members', 'view_reports', 'send_reminders', 'system_settings', 'data_export', 'audit_logs']
+            },
+            {
+                email: 'publicity@psntaraba.org.ng',
+                password: 'PSN@Publicity2025!',
+                name: 'Publicity Secretary',
+                role: 'Publicity Secretary',
+                permissions: ['manage_news', 'view_reports', 'data_export']
             },
             {
                 email: 'welfare@psntaraba.org.ng',
                 password: 'Welfare2025!',
                 name: 'Welfare Secretary',
+                role: 'Welfare Secretary',
                 permissions: ['manage_members', 'view_reports', 'send_reminders', 'data_export']
             },
             {
                 email: 'mafindi001@gmail.com',
                 password: 'Admin123!',
                 name: 'Primary Administrator',
-                permissions: ['manage_members', 'view_reports', 'send_reminders', 'system_settings', 'data_export', 'audit_logs', 'user_management']
+                role: 'Super Administrator',
+                permissions: ['manage_members', 'view_reports', 'send_reminders', 'system_settings', 'data_export', 'audit_logs', 'user_management', 'manage_news', 'ip_whitelist', 'backup_restore']
             }
         ];
 
@@ -866,7 +945,7 @@
                 email: admin.email,
                 phone: '08000000000',
                 is_admin: true,
-                role: 'System Administrator',
+                role: admin.role || 'System Administrator',
                 permissions: admin.permissions,
                 last_login: new Date().toISOString(),
                 created_at: new Date().toISOString(),
@@ -1083,18 +1162,20 @@
         }
 
         // ==================== UTILITY FUNCTIONS ====================
-        function autoFillCredentials() {
-            document.getElementById('adminEmail').value = 'admin@psntaraba.org.ng';
-            document.getElementById('adminPassword').value = 'PSNTaraba2025!';
+        function fillCredentials(email, password) {
+            document.getElementById('adminEmail').value = email;
+            document.getElementById('adminPassword').value = password;
             document.getElementById('adminEmail').classList.add('success');
             document.getElementById('adminPassword').classList.add('success');
-
-            showInfo('Built-in admin credentials filled. Click Login.');
-
+            showInfo('Credentials filled. Click Login to Admin Portal.');
             setTimeout(() => {
                 document.getElementById('adminEmail').classList.remove('success');
                 document.getElementById('adminPassword').classList.remove('success');
             }, 2000);
+        }
+
+        function autoFillCredentials() {
+            fillCredentials('superadmin@psntaraba.org.ng', 'PSN@SuperAdmin2025!');
         }
 
         function copyToClipboard(text, button) {
@@ -1139,8 +1220,16 @@
                 showWarning('Using built-in admin accounts. No database required.');
             }
 
-            // Auto-fill credentials on localhost for testing
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Auto-fill based on ?role= query parameter
+            const urlRole = new URLSearchParams(window.location.search).get('role');
+            const roleMap = {
+                superadmin:  { email: 'superadmin@psntaraba.org.ng',  password: 'PSN@SuperAdmin2025!' },
+                publicity:   { email: 'publicity@psntaraba.org.ng',   password: 'PSN@Publicity2025!' },
+                admin:       { email: 'admin@psntaraba.org.ng',        password: 'PSNTaraba2025!' }
+            };
+            if (urlRole && roleMap[urlRole]) {
+                fillCredentials(roleMap[urlRole].email, roleMap[urlRole].password);
+            } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 autoFillCredentials();
             }
 

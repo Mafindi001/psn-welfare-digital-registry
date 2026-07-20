@@ -1,120 +1,224 @@
-// Two-Factor Authentication
-model TwoFactorSecret {
-  id                String    @id @default(cuid())
-  userId            String    @unique
-  secret            String?   // Base32 encoded secret
-  tempSecret        String?   // Temporary secret during setup
-  tempSecretExpiry  DateTime?
-  enabled           Boolean   @default(false)
-  enabledAt         DateTime?
-  disabledAt        DateTime?
-  disabledBy        String?   // User ID of admin who disabled it
-  
-  // Backup codes
-  backupCodes       TwoFactorBackupCode[]
-  
-  // Timestamps
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Members ─────────────────────────────────────────────────────────────────
+model Member {
+  id                  String    @id @default(cuid())
+  psnNumber           String    @unique
+  email               String    @unique
+  passwordHash        String
+  fullName            String
+  phone               String
+  dateOfBirth         DateTime?
+  weddingDate         DateTime?
+  profilePicture      String?
+  isAdmin             Boolean   @default(false)
+  role                String    @default("member")
+  permissions         String[]  @default([])
+  status              String    @default("active")
+  isActive            Boolean   @default(true)
+  consentGiven        Boolean   @default(false)
+  consentDate         DateTime?
+  lastLogin           DateTime?
+  lastActivity        DateTime?
+  lastPasswordChange  DateTime?
+  failedLoginAttempts Int       @default(0)
+  accountLocked       Boolean   @default(false)
+  lockedUntil         DateTime?
+  requires2FA         Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
   // Relations
-  member            Member    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  twoFactorSecret     TwoFactorSecret?
+  twoFactorBackupCodes TwoFactorBackupCode[]
+  twoFactorSmsCodes   TwoFactorSmsCode[]
+  securityEvents      SecurityEvent[]
+  auditLogs           AuditLog[]
+  specialDates        SpecialDate[]
+  reminderLogs        ReminderLog[]
+  backups             Backup[]
+  newsPosts           NewsPost[]
+  addedIPs            IPWhitelist[] @relation("AddedIPs")
+  updatedIPs          IPWhitelist[] @relation("UpdatedIPs")
+
+  @@map("members")
+}
+
+// ─── Special Dates ────────────────────────────────────────────────────────────
+model SpecialDate {
+  id          String   @id @default(cuid())
+  memberId    String
+  type        String   // birthday | anniversary | custom
+  title       String
+  date        DateTime
+  recurring   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("special_dates")
+}
+
+// ─── Reminder Logs ───────────────────────────────────────────────────────────
+model ReminderLog {
+  id            String   @id @default(cuid())
+  memberId      String
+  specialDateId String?
+  type          String   // email | sms
+  status        String   @default("pending") // pending | sent | failed
+  sentAt        DateTime?
+  error         String?
+  createdAt     DateTime @default(now())
+
+  member        Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@map("reminder_logs")
+}
+
+// ─── Audit Logs ──────────────────────────────────────────────────────────────
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  userName   String?
+  action     String
+  entityType String?
+  entityId   String?
+  details    Json?
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  user       Member?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+// ─── Backups ─────────────────────────────────────────────────────────────────
+model Backup {
+  id          String   @id @default(cuid())
+  type        String   @default("full")
+  status      String   @default("pending") // pending | completed | failed
+  filePath    String?
+  fileSize    Int?
+  s3Key       String?
+  metadata    Json?
+  error       String?
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator     Member?  @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@map("backups")
+}
+
+// ─── Two-Factor Authentication ────────────────────────────────────────────────
+model TwoFactorSecret {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  secret           String?
+  tempSecret       String?
+  tempSecretExpiry DateTime?
+  enabled          Boolean   @default(false)
+  enabledAt        DateTime?
+  disabledAt       DateTime?
+  disabledBy       String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  member           Member    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  backupCodes      TwoFactorBackupCode[]
+
   @@map("two_factor_secrets")
 }
 
 model TwoFactorBackupCode {
-  id                String    @id @default(cuid())
-  userId            String
-  codeHash          String    // Hashed backup code
-  used              Boolean   @default(false)
-  usedAt            DateTime?
-  
-  // Timestamps
-  createdAt         DateTime  @default(now())
-  
-  // Relations
-  member            Member    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id        String    @id @default(cuid())
+  userId    String
+  secretId  String?
+  codeHash  String
+  used      Boolean   @default(false)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  member    Member    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secret    TwoFactorSecret? @relation(fields: [secretId], references: [id], onDelete: Cascade)
+
   @@map("two_factor_backup_codes")
 }
 
 model TwoFactorSmsCode {
-  id                String    @id @default(cuid())
-  userId            String
-  phoneNumber       String
-  code              String
-  used              Boolean   @default(false)
-  usedAt            DateTime?
-  expiresAt         DateTime
-  
-  // Timestamps
-  createdAt         DateTime  @default(now())
-  
-  // Relations
-  member            Member    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id          String    @id @default(cuid())
+  userId      String
+  phoneNumber String
+  code        String
+  used        Boolean   @default(false)
+  usedAt      DateTime?
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  member      Member    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("two_factor_sms_codes")
 }
 
-// IP Whitelisting
+// ─── IP Whitelisting ──────────────────────────────────────────────────────────
 model IPWhitelist {
-  id                String    @id @default(cuid())
-  ipAddress         String    @unique
-  isAdminIP         Boolean   @default(false)
-  notes             String?
-  enabled           Boolean   @default(true)
-  
-  // Audit fields
-  addedBy           String?
-  updatedBy         String?
-  
-  // Timestamps
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
-  // Relations
-  addedByUser       Member?   @relation("AddedIPs", fields: [addedBy], references: [id])
-  updatedByUser     Member?   @relation("UpdatedIPs", fields: [updatedBy], references: [id])
-  
+  id          String   @id @default(cuid())
+  ipAddress   String   @unique
+  isAdminIP   Boolean  @default(false)
+  notes       String?
+  enabled     Boolean  @default(true)
+  addedBy     String?
+  updatedBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  addedByUser   Member? @relation("AddedIPs",   fields: [addedBy],   references: [id])
+  updatedByUser Member? @relation("UpdatedIPs", fields: [updatedBy], references: [id])
+
   @@map("ip_whitelist")
 }
 
-// Security Events
+// ─── Security Events ──────────────────────────────────────────────────────────
 model SecurityEvent {
-  id                String    @id @default(cuid())
-  eventType         String    // LOGIN_ATTEMPT, PASSWORD_RESET, 2FA_FAILED, etc.
-  userId            String?
-  ipAddress         String
-  userAgent         String?
-  success           Boolean
-  details           Json?
-  
-  // Timestamps
-  timestamp         DateTime  @default(now())
-  
-  // Relations
-  member            Member?   @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+  id        String   @id @default(cuid())
+  eventType String
+  userId    String?
+  ipAddress String
+  userAgent String?
+  success   Boolean
+  details   Json?
+  timestamp DateTime @default(now())
+
+  member    Member?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
   @@map("security_events")
 }
 
-// Update Member model
-model Member {
-  // ... existing fields ...
-  
-  // Security fields
-  requires2FA       Boolean   @default(false)
-  lastPasswordChange DateTime?
-  failedLoginAttempts Int     @default(0)
-  accountLocked     Boolean   @default(false)
-  lockedUntil       DateTime?
-  
-  // Security relations
-  twoFactorSecret   TwoFactorSecret?
-  securityEvents    SecurityEvent[]
-  addedIPs          IPWhitelist[]    @relation("AddedIPs")
-  updatedIPs        IPWhitelist[]    @relation("UpdatedIPs")
-  
-  // ... rest of model ...
+// ─── News / Announcements ─────────────────────────────────────────────────────
+model NewsPost {
+  id          String    @id @default(cuid())
+  title       String
+  content     String
+  excerpt     String?
+  category    String    @default("general")
+  status      String    @default("draft")
+  coverImage  String?
+  authorId    String
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  author      Member    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("news_posts")
 }
